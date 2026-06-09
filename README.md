@@ -33,8 +33,8 @@ pm2 restart hydrooj
   countdown:
     title: 赛事倒计时
     atcoder: true   # 改为 false 则不会自动抓取 ABC
-    limit: 5
-    dates:
+    limit: 5        # 倒计时显示数量
+    dates:          # 本地配置倒计时，前端渲染会根据时间自动排序
       - name: 第 42 次 CSP
         date: 2026-06-10 08:00
         url: https://www.cspro.org
