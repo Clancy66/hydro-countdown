@@ -245,12 +245,14 @@
         cards.forEach((card, index) => {
             const startTime = parseInt(card.getAttribute('data-start-time'), 10);
             const name = card.querySelector('.cd-title')?.innerText || '';
+            const url = card.getAttribute('href') || '#';
             
             if (!isNaN(startTime)) {
                 newData.push({
                     name: name,
                     startTime: startTime,
-                    index: index // 绑定索引
+                    index: index,
+                    url: url
                 });
             }
         });

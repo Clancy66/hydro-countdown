@@ -137,7 +137,7 @@ HomeHandler.prototype.getCountdown = async (domainId, payload) => {
         if (name.includes('GESP')) {
             item.url = 'https://gesp.ccf.org.cn';
         } else if (name.includes('电子学会') || name.includes('CIE')) {
-            item.url = 'https://qceit.org.cn/bos';
+            item.url = 'https://qceit.org.cn';
         } else if (name.includes('CSP') || name.includes('NOI')) {
             item.url = 'https://noi.cn';
         } else if (name.includes('蓝桥')) {

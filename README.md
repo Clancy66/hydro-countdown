@@ -1,6 +1,6 @@
 # Hydro 倒计时插件
 
-兼容 V5.0.1 社区版，依赖 moment 库，特点如下。
+兼容 V5.0.1 社区版，不依赖任何插件和第三方库，安装方法见官方文档。插件特点如下。
 1. 根据紧急程度适配不同的选项卡颜色。
 2. 支持本地配置，可以只配置日期，也可以精确到时间以支持秒级倒计时。
 3. 支持秒级倒计时，前端秒级静默更新，需要配置时精确到时间。
@@ -15,19 +15,9 @@
      默认是蓝桥青少，如果是大学生组，请手动配置
    - 天梯：https://gplt.patest.cn
 
-安装与配置方法如下。
+## 配置方法
 
 ```bash
-# 安装
-cd .hydro/addons
-git clone https://github.com/Clancy66/hydro-countdown.git
-cd hydro-countdown
-rm -rf img/
-yarn install
-hydrooj addon add /root/.hydro/addons/hydro-countdown
-pm2 restart hydrooj
-
-# 配置
 # 在系统设置中 hydrooj.homepage 中适当的位置添加配置，示例如下
 - width: 4          # 配置在右侧边栏，默认宽度为 3，这里进行了调整
   countdown:
