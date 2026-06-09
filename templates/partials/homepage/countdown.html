@@ -24,7 +24,7 @@
         border-left: 6px solid #cbd5e1; 
         cursor: pointer;
         
-        /* 【新增】重置 <a> 标签默认样式 */
+        /* 重置 <a> 标签默认样式 */
         text-decoration: none;
         color: inherit;
         outline: none; /* 去除点击时的默认边框 */
@@ -119,20 +119,21 @@
     <div class="section__body typo" id="countdowns">
         {% for date in payload.dates %}
         
-        <!-- 【核心修改】将 div 替换为 a 标签，并绑定 url -->
         <a class="cd-card" 
+           data-index="{{ loop.index0 }}" 
            data-days="{{date.diff}}" 
+           data-start-time="{{date.startTime}}"
            href="{{date.url}}" 
            target="_blank" 
            rel="noopener noreferrer">
            
             <div class="cd-info">
                 <div class="cd-title">{{date.name}}</div>
-                <div class="cd-desc">距 {{date.name}} 还有 {{date.diff}} 天</div>
+                <div class="cd-desc">距 {{date.name}} 还有 {{date.diff}}</div>
             </div>
             <div class="cd-days-wrapper">
                 <div class="cd-number">{{date.diff}}</div>
-                <div class="cd-label">Days Left</div>
+                <div class="cd-label">{{date.label}}</div>
             </div>
         </a>
         
@@ -142,32 +143,206 @@
 </div>
 
 <script>
-    function loadCountdown() {
-        // 选择器改为 a.cd-card
-        const cards = document.querySelectorAll('a.cd-card');
-        
-        cards.forEach(card => {
-            // 1. 获取天数
-            const days = parseInt(card.getAttribute('data-days'));
-            
-            // 2. 清理旧类名
-            card.classList.remove('status-urgent', 'status-soon', 'status-safe');
+    let timeOffset = 0; 
+    let countdownData = [];
+    let timer = null;
+    let needsRefresh = false; // 标记是否需要重新拉取数据
 
-            // 3. 逻辑判断并添加新类名
-            if (days <= 3) {
-                card.classList.add('status-urgent');
-            } else if (days <= 14) {
-                card.classList.add('status-soon');
-            } else {
-                card.classList.add('status-safe');
+    // 1. 核心：基于服务端时间的递归更新函数
+    function tick() {
+        const now = Date.now() + timeOffset; 
+        const container = document.getElementById('countdowns');
+        
+        if (!container || !countdownData.length) return;
+
+        const cards = container.querySelectorAll('a.cd-card');
+        for (let i = cards.length - 1; i >= 0; i--) {
+            const card = cards[i];
+            const dataIndex = parseInt(card.getAttribute('data-index'), 10);
+            const item = countdownData[dataIndex];
+            
+            if (!item || !item.startTime) continue;
+
+            const diffMs = item.startTime - now;
+            
+            // 如果倒计时结束，移除 DOM 并从数据源中剔除
+            if (diffMs <= 0) {
+                card.remove();
+                countdownData.splice(dataIndex, 1);
+                needsRefresh = true; // 标记需要补充卡片
+                continue; 
             }
+
+            // 正常倒计时状态下的 UI 更新
+            const numberEl = card.querySelector('.cd-number');
+            const labelEl = card.querySelector('.cd-label')
+            const descEl = card.querySelector('.cd-desc');
+            
+            const diffMins = Math.floor(diffMs / (1000 * 60));
+            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            
+            if (diffDays > 0) {
+                numberEl.innerText = diffDays;
+                labelEl.innerText = `Days Left`;
+                descEl.innerText = `距 ${item.name} 还有 ${diffDays} 天`;
+            } else if (diffHours > 0) {
+                numberEl.innerText = `${diffHours}`;
+                labelEl.innerText = `Hours Left`;
+                descEl.innerText = `距 ${item.name} 还有 ${diffHours} 小时`;
+            } else if (diffMins > 0) {
+                numberEl.innerText = `${diffMins}`;
+                labelEl.innerText = `Minutes Left`;
+                descEl.innerText = `距 ${item.name} 还有 ${diffMins} 分钟`;
+            } else if (diffMins === 0) {
+                const secs = Math.floor(diffMs / 1000);
+                numberEl.innerText = `${secs}`;
+                labelEl.innerText = `Seconds Left`;
+                descEl.innerText = `距 ${item.name} 还有 ${secs} 秒`;
+            }
+            
+            applyCardStatus(card, diffDays);
+        }
+
+        // 如果有卡片结束，触发静默刷新补充新卡片
+        if (needsRefresh) {
+            refreshCountdownData();
+            needsRefresh = false; // 重置标记，防止频繁请求
+        }
+
+        // 如果所有倒计时都结束了且没有触发刷新，停止定时器
+        if (countdownData.length === 0 && !needsRefresh) {
+            clearTimeout(timer);
+            return;
+        }
+
+        timer = setTimeout(tick, 200); 
+    }
+
+    // 2. 抽取颜色判断逻辑
+    function applyCardStatus(card, diffDays) {
+        card.classList.remove('status-urgent', 'status-soon', 'status-safe');
+        if (diffDays <= 3) {
+            card.classList.add('status-urgent');
+        } else if (diffDays <= 14) {
+            card.classList.add('status-soon');
+        } else {
+            card.classList.add('status-safe');
+        }
+    }
+
+    // 3. 从当前页面 HTML 中提取倒计时数据
+    function parseCountdownFromHTML(htmlString) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlString, 'text/html');
+        const container = doc.getElementById('countdowns');
+        
+        if (!container) return null;
+
+        const cards = container.querySelectorAll('a.cd-card');
+        const newData = [];
+
+        cards.forEach((card, index) => {
+            const startTime = parseInt(card.getAttribute('data-start-time'), 10);
+            const name = card.querySelector('.cd-title')?.innerText || '';
+            
+            if (!isNaN(startTime)) {
+                newData.push({
+                    name: name,
+                    startTime: startTime,
+                    index: index // 绑定索引
+                });
+            }
+        });
+
+        return newData;
+    }
+
+    // 4. 静默刷新数据并重新渲染 DOM
+    async function refreshCountdownData() {
+        try {
+            const res = await fetch(window.location.href);
+            if (!res.ok) return;
+            const html = await res.text();
+            
+            const newData = parseCountdownFromHTML(html);
+            if (newData && newData.length > 0) {
+                countdownData = newData;
+                renderAllCards(); // 重新渲染整个列表
+            }
+        } catch (e) {
+            console.warn('倒计时补充刷新失败:', e);
+        }
+    }
+
+    // 5. 重新生成所有卡片 DOM
+    function renderAllCards() {
+        const container = document.getElementById('countdowns');
+        if (!container) return;
+
+        container.innerHTML = ''; // 清空旧内容
+
+        countdownData.forEach((item, index) => {
+            const a = document.createElement('a');
+            a.className = 'cd-card';
+            a.href = item.url || '#';
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            a.setAttribute('data-index', index);
+            a.setAttribute('data-start-time', item.startTime);
+
+            a.innerHTML = `
+                <div class="cd-info">
+                    <div class="cd-title">${item.name}</div>
+                    <div class="cd-desc">距 ${item.name} 还有...</div>
+                </div>
+                <div class="cd-days-wrapper">
+                    <div class="cd-number">...</div>
+                    <div class="cd-label">Days Left</div>
+                </div>
+            `;
+            
+            container.appendChild(a);
         });
     }
 
-    // 确保页面加载完成后执行
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', loadCountdown);
-    } else {
-        loadCountdown();
+    // 6. 初始化与校准逻辑
+    async function initCountdown() {
+        try {
+            const res = await fetch(window.location.href);
+            if (!res.ok) return;
+            const html = await res.text();
+            
+            const newData = parseCountdownFromHTML(html);
+            if (newData && newData.length > 0) {
+                countdownData = newData;
+                renderAllCards(); // 首次渲染
+                tick(); // 启动定时器
+            }
+        } catch (e) {
+            console.warn('倒计时初始化失败:', e);
+        }
     }
+
+    // 7. 页面加载时启动
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initCountdown);
+    } else {
+        initCountdown();
+    }
+
+    // 8. 每 60 秒静默校准一次时间偏移量
+    setInterval(async () => {
+        try {
+            const res = await fetch(window.location.href);
+            if (res.ok) {
+                const html = await res.text();
+                const newData = parseCountdownFromHTML(html);
+                if (newData && newData.length > 0) {
+                    countdownData = newData;
+                    renderAllCards();
+                }
+            }
+        } catch (e) { /* 忽略网络错误 */ }
+    }, 60000);
 </script>
