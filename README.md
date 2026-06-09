@@ -7,10 +7,12 @@
 4. 支持自动抓取 ABC 最近 30 天的比赛，每天 0 点自动抓取，自动精确到时间。
 5. 倒计时结束的赛事会自动删除卡片，并且根据配置自动补充赛事。
 6. 每一项倒计时卡片都可以跳转到对应的赛事官网，其中 ABC 会跳转到对应比赛页面。本地配置的赛事可以配置 url，也可以不配置，name 字段包含以下关键字可以自动配置 url，
-   - CSP、NOI：https://noi.cn（CSP 默认是 CSP-J/S，如果是纯 CSP，请手动配置）
+   - CSP、NOI：https://noi.cn
+     CSP 默认是 CSP-J/S，如果是纯 CSP，请手动配置
    - GESP：https://gesp.ccf.org.cn
    - 电子学会、CIE：https://qceit.org.cn
-   - 蓝桥：https://www.lanqiaoqingshao.cn（默认是蓝桥青少，如果是大学生组，请手动配置）
+   - 蓝桥：https://www.lanqiaoqingshao.cn
+     默认是蓝桥青少，如果是大学生组，请手动配置
    - 天梯：https://gplt.patest.cn
 
 安装与配置方法如下。
