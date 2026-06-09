@@ -1,0 +1,173 @@
+<style>
+    /* --- 容器布局 --- */
+    #countdowns {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        padding: 5px 15px;
+    }
+
+    /* --- 卡片基础样式 (改为 a 标签适配) --- */
+    a.cd-card {
+        background-color: #ffffff;
+        border-radius: 10px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        padding: 18px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        
+        /* 关键：添加过渡动画 */
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        
+        /* 默认左边框颜色 */
+        border-left: 6px solid #cbd5e1; 
+        cursor: pointer;
+        
+        /* 【新增】重置 <a> 标签默认样式 */
+        text-decoration: none;
+        color: inherit;
+        outline: none; /* 去除点击时的默认边框 */
+    }
+
+    /* --- ✨ 鼠标悬停浮动效果 --- */
+    a.cd-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    /* --- 左侧信息区 --- */
+    .cd-info {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .cd-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: #1e293b;
+        margin: 0;
+    }
+
+    .cd-desc {
+        font-size: 13px;
+        color: #64748b;
+        margin: 0;
+    }
+
+    /* --- 右侧数据区 --- */
+    .cd-days-wrapper {
+        text-align: right;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+    }
+
+    .cd-number {
+        font-size: 24px;
+        font-weight: 800;
+        line-height: 1;
+        margin-bottom: 4px;
+    }
+
+    .cd-label {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #94a3b8;
+        font-weight: 600;
+    }
+
+    /* ========================================= */
+    /* --- 🎨 状态颜色定义 --- */
+    /* ========================================= */
+    
+    /* 🔴 紧急 (红色) */
+    a.cd-card.status-urgent {
+        border-left-color: #ef4444 !important;
+    }
+    a.cd-card.status-urgent .cd-number {
+        color: #ef4444;
+    }
+
+    /* 🔵 即将开始 (蓝色) */
+    a.cd-card.status-soon {
+        border-left-color: #3b82f6 !important;
+    }
+    a.cd-card.status-soon .cd-number {
+        color: #3b82f6;
+    }
+
+    /* 🟢 安全/远期 (绿色) */
+    a.cd-card.status-safe {
+        border-left-color: #10b981 !important;
+    }
+    a.cd-card.status-safe .cd-number {
+        color: #10b981;
+    }
+</style>
+
+<div class="section side nojs--hide">
+    <div class="section__header">
+        <h1 class="section__title" id="countdown_title">
+            {% if payload.title %}{{payload.title}}{% else %}赛事倒计时{% endif %}
+        </h1>
+    </div>
+    
+    {% if payload.dates %}
+    <div class="section__body typo" id="countdowns">
+        {% for date in payload.dates %}
+        
+        <!-- 【核心修改】将 div 替换为 a 标签，并绑定 url -->
+        <a class="cd-card" 
+           data-days="{{date.diff}}" 
+           href="{{date.url}}" 
+           target="_blank" 
+           rel="noopener noreferrer">
+           
+            <div class="cd-info">
+                <div class="cd-title">{{date.name}}</div>
+                <div class="cd-desc">距 {{date.name}} 还有 {{date.diff}} 天</div>
+            </div>
+            <div class="cd-days-wrapper">
+                <div class="cd-number">{{date.diff}}</div>
+                <div class="cd-label">Days Left</div>
+            </div>
+        </a>
+        
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    function loadCountdown() {
+        // 选择器改为 a.cd-card
+        const cards = document.querySelectorAll('a.cd-card');
+        
+        cards.forEach(card => {
+            // 1. 获取天数
+            const days = parseInt(card.getAttribute('data-days'));
+            
+            // 2. 清理旧类名
+            card.classList.remove('status-urgent', 'status-soon', 'status-safe');
+
+            // 3. 逻辑判断并添加新类名
+            if (days <= 3) {
+                card.classList.add('status-urgent');
+            } else if (days <= 14) {
+                card.classList.add('status-soon');
+            } else {
+                card.classList.add('status-safe');
+            }
+        });
+    }
+
+    // 确保页面加载完成后执行
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', loadCountdown);
+    } else {
+        loadCountdown();
+    }
+</script>
