@@ -114,7 +114,7 @@
         color: #10b981;
     }
 </style>
-
+{% if UserContext._id != 0 %}
 <div class="section side nojs--hide">
     <div class="section__header">
         <h1 class="section__title" id="countdown_title">
@@ -148,7 +148,7 @@
     </div>
     {% endif %}
 </div>
-
+{% endif %}
 <script>
     let timeOffset = 0; 
     let countdownData = [];
