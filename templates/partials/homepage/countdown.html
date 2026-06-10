@@ -9,7 +9,6 @@
 
     /* --- 卡片基础样式 (改为 a 标签适配) --- */
     a.cd-card {
-        background-color: #ffffff;
         border-radius: 10px;
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
         padding: 18px 24px;
@@ -30,6 +29,10 @@
         outline: none; /* 去除点击时的默认边框 */
     }
 
+    html[data-mantine-color-scheme="dark"] a.cd-card {
+        background: rgba(164, 165, 161, 0.1); !important;
+    }
+
     /* --- ✨ 鼠标悬停浮动效果 --- */
     a.cd-card:hover {
         transform: translateY(-4px);
@@ -48,6 +51,10 @@
         font-weight: 700;
         color: #1e293b;
         margin: 0;
+    }
+
+    html[data-mantine-color-scheme="dark"] .cd-title {
+        color: rgba(252, 252, 250); !important;
     }
 
     .cd-desc {
