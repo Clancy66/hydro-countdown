@@ -33,7 +33,7 @@ async function syncAtCoderContests() {
 
                 if (typeof rawTitle !== 'string') continue; 
 
-                let numMatch = rawTitle.match(/Contest\s+(\d+)/i);
+                let numMatch = rawTitle.match(/AtCoder Beginner Contest\s+(\d+)/i);
                 if (!numMatch) {
                     numMatch = rawTitle.match(/(\d+)/);
                 }
